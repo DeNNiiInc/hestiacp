@@ -54,6 +54,35 @@ Smart Chain: 0xfF3Dd2c889bd0Ff73d8085B84A314FC7c88e5D51<br>
 - Hestia Control Panel does not support 32 bit operating systems!
 - Hestia Control Panel in combination with OpenVZ 7 or lower might have issues with DNS and/or firewall. If you use a Virtual Private Server we strongly advice you to use something based on KVM or LXC!
 
+## Docker Installation (Alternative)
+
+HestiaCP is now available as a Docker container! This provides an alternative installation method for testing or development environments.
+
+**Quick Start:**
+
+```bash
+docker run -d \
+  --name hestiacp \
+  --privileged \
+  -p 8083:8083 -p 80:80 -p 443:443 \
+  -e ADMIN_PASSWORD=your_secure_password \
+  hestiacp/hestiacp:latest
+```
+
+**Using Docker Compose:**
+
+```bash
+git clone https://github.com/hestiacp/hestiacp.git
+cd hestiacp
+docker-compose up -d
+```
+
+Access the control panel at `https://localhost:8083`
+
+For detailed Docker documentation, see [DOCKER.md](DOCKER.md).
+
+> **Note:** The Docker version is intended for testing and development. For production use, we recommend installing HestiaCP directly on a server.
+
 ## Installing Hestia Control Panel
 
 - **NOTE:** You must install Hestia Control Panel on top of a fresh operating system installation to ensure proper functionality.

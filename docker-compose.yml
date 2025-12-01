@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  hestiacp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: hestiacp/hestiacp:latest
+    container_name: hestiacp
+    hostname: hestia.local
+    privileged: true
+    restart: unless-stopped
+
+    # Environment variables
+    environment:
+      - ADMIN_USERNAME=admin
+      - ADMIN_PASSWORD=changeme123!
+      - ADMIN_EMAIL=admin@example.com
+      - HOSTNAME=hestia.local
+
+    # Port mappings
+    ports:
+      - "80:80"       # HTTP
+      - "443:443"     # HTTPS
+      - "8083:8083"   # HestiaCP Admin Panel
+      - "21:21"       # FTP
+      - "22:22"       # SSH
+      - "25:25"       # SMTP
+      - "587:587"     # SMTP Submission
+      - "465:465"     # SMTPS
+      - "110:110"     # POP3
+      - "995:995"     # POP3S
+      - "143:143"     # IMAP
+      - "993:993"     # IMAPS
+      - "53:53/tcp"   # DNS TCP
+      - "53:53/udp"   # DNS UDP
+      - "3306:3306"   # MySQL/MariaDB
+      - "5432:5432"   # PostgreSQL
+
+    # Volume mappings for persistent data
+    volumes:
+      - hestia_data:/usr/local/hestia
+      - hestia_home:/home
+      - hestia_mysql:/var/lib/mysql
+      - hestia_postgresql:/var/lib/postgresql
+      - hestia_mail:/var/vmail
+      - hestia_ssl:/etc/letsencrypt
+      - hestia_dns:/var/named
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+
+    # Capabilities for systemd
+    cap_add:
+      - SYS_ADMIN
+      - NET_ADMIN
+      - SYS_TIME
+
+    # Tmpfs for systemd
+    tmpfs:
+      - /run
+      - /run/lock
+      - /tmp
+
+# Named volumes for data persistence
+volumes:
+  hestia_data:
+    driver: local
+  hestia_home:
+    driver: local
+  hestia_mysql:
+    driver: local
+  hestia_postgresql:
+    driver: local
+  hestia_mail:
+    driver: local
+  hestia_ssl:
+    driver: local
+  hestia_dns:
+    driver: local
+
+networks:
+  default:
+    driver: bridge

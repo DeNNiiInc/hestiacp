@@ -1,0 +1,42 @@
+# Git files
+.git
+.gitignore
+.gitmodules
+.github
+
+# Documentation
+docs
+*.md
+!DOCKER.md
+
+# Development files
+.vscode
+.editorconfig
+.prettierrc.cjs
+.prettierignore
+.lintstagedrc.cjs
+.markdownlint-cli2.cjs
+biome.json
+phpcs.xml
+.husky
+
+# CI/CD
+.drone.yml
+renovate.json
+crowdin.yml
+
+# Node.js
+node_modules
+package-lock.json
+package.json
+build.js
+
+# Test files
+test
+
+# Temporary files
+*.log
+*.tmp
+*.bak
+*.swp
+*~

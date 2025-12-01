@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e
 
 # HestiaCP Docker Entrypoint Script
 # This script initializes HestiaCP on first run and starts all services
@@ -11,68 +10,84 @@ log() {
     echo "[HestiaCP Docker] $1"
 }
 
-# Function to install HestiaCP
-install_hestia() {
-    log "Starting HestiaCP installation..."
+log "HestiaCP Docker Container Starting..."
 
-    # Set hostname
-    if [ -n "$HOSTNAME" ]; then
-        hostnamectl set-hostname "$HOSTNAME" || true
-        echo "127.0.0.1 $HOSTNAME" >> /etc/hosts
-    fi
+# Check if this is the first run (before systemd starts)
+if [ ! -f "$HESTIA_INSTALLED_FLAG" ]; then
+    log "First run detected - HestiaCP will be installed after systemd starts"
 
-    # Run HestiaCP installer in non-interactive mode
-    bash /tmp/hst-install.sh \
-        --interactive no \
-        --email "${ADMIN_EMAIL:-admin@localhost}" \
-        --password "${ADMIN_PASSWORD:-changeme}" \
-        --username "${ADMIN_USERNAME:-admin}" \
-        --hostname "${HOSTNAME:-hestia.local}" \
-        --force
+    # Create a systemd service to run the installation on first boot
+    cat > /etc/systemd/system/hestiacp-install.service <<EOF
+[Unit]
+Description=HestiaCP First-Time Installation
+After=network.target
 
-    # Mark as installed
-    touch "$HESTIA_INSTALLED_FLAG"
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/hestiacp-install.sh
 
-    log "HestiaCP installation completed!"
+[Install]
+WantedBy=multi-user.target
+EOF
+
+    # Create the installation script
+    cat > /usr/local/bin/hestiacp-install.sh <<'EOF'
+#!/bin/bash
+set -e
+
+HESTIA_INSTALLED_FLAG="/usr/local/hestia/.docker-installed"
+
+log() {
+    echo "[HestiaCP Docker] $1"
 }
 
-# Function to start HestiaCP services
-start_hestia() {
-    log "Starting HestiaCP services..."
+if [ -f "$HESTIA_INSTALLED_FLAG" ]; then
+    log "HestiaCP already installed, skipping..."
+    exit 0
+fi
 
-    # Enable and start HestiaCP service if it exists
-    if [ -f /etc/systemd/system/hestia.service ]; then
-        systemctl enable hestia.service || true
-        systemctl start hestia.service || true
-    fi
+log "Starting HestiaCP installation..."
 
-    log "HestiaCP services started"
-}
+# Set hostname
+if [ -n "$HOSTNAME" ]; then
+    hostnamectl set-hostname "$HOSTNAME" 2>/dev/null || true
+    echo "127.0.0.1 $HOSTNAME" >> /etc/hosts
+fi
 
-# Main entrypoint logic
-main() {
-    log "HestiaCP Docker Container Starting..."
+# Run HestiaCP installer in non-interactive mode
+log "Running HestiaCP installer (this will take 30-60 minutes)..."
+bash /tmp/hst-install.sh \
+    --interactive no \
+    --email "${ADMIN_EMAIL:-admin@localhost}" \
+    --password "${ADMIN_PASSWORD:-changeme}" \
+    --username "${ADMIN_USERNAME:-admin}" \
+    --hostname "${HOSTNAME:-hestia.local}" \
+    --force
 
-    # Check if this is the first run
-    if [ ! -f "$HESTIA_INSTALLED_FLAG" ]; then
-        log "First run detected - installing HestiaCP..."
-        install_hestia
-    else
-        log "HestiaCP already installed, starting services..."
-        start_hestia
-    fi
+# Mark as installed
+touch "$HESTIA_INSTALLED_FLAG"
 
-    # Display access information
-    log "=========================================="
-    log "HestiaCP is ready!"
-    log "Web Interface: https://localhost:8083"
-    log "Username: ${ADMIN_USERNAME:-admin}"
-    log "Password: ${ADMIN_PASSWORD:-changeme}"
-    log "=========================================="
+log "HestiaCP installation completed!"
+log "=========================================="
+log "HestiaCP is ready!"
+log "Web Interface: https://localhost:8083"
+log "Username: ${ADMIN_USERNAME:-admin}"
+log "Password: ${ADMIN_PASSWORD:-changeme}"
+log "=========================================="
 
-    # Execute the CMD (systemd)
-    exec "$@"
-}
+# Disable this service so it doesn't run again
+systemctl disable hestiacp-install.service
+EOF
 
-# Run main function
-main "$@"
+    chmod +x /usr/local/bin/hestiacp-install.sh
+
+    # Enable the installation service
+    systemctl enable hestiacp-install.service 2>/dev/null || true
+else
+    log "HestiaCP already installed"
+fi
+
+# Start systemd as PID 1
+log "Starting systemd..."
+exec /lib/systemd/systemd

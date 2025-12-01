@@ -58,30 +58,250 @@ Smart Chain: 0xfF3Dd2c889bd0Ff73d8085B84A314FC7c88e5D51<br>
 
 HestiaCP is now available as a Docker container! This provides an alternative installation method for testing or development environments.
 
-**Quick Start:**
+> **Note:** The Docker version is intended for testing and development. For production use, we recommend installing HestiaCP directly on a server.
+
+### Prerequisites
+
+Before you begin, you'll need:
+
+- A Linux server or computer (Ubuntu, Debian, etc.)
+- OR Windows with WSL2 (Windows Subsystem for Linux) installed
+- OR macOS with Docker Desktop
+- At least 4GB of RAM
+- At least 20GB of free disk space
+
+### Step 1: Install Docker
+
+Choose the instructions for your operating system:
+
+#### On Ubuntu/Debian Linux:
+
+```bash
+# Update package list
+sudo apt-get update
+
+# Install required packages
+sudo apt-get install -y ca-certificates curl gnupg
+
+# Add Docker's official GPG key
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+# Add Docker repository
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# Install Docker
+sudo apt-get update
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+# Add your user to the docker group (so you don't need sudo)
+sudo usermod -aG docker $USER
+
+# Log out and log back in for the group change to take effect
+```
+
+#### On Windows (WSL2):
+
+1. Download and install [Docker Desktop for Windows](https://www.docker.com/products/docker-desktop/)
+2. During installation, ensure "Use WSL 2 instead of Hyper-V" is selected
+3. Open Docker Desktop and go to Settings → Resources → WSL Integration
+4. Enable integration with your WSL2 distribution
+5. Open WSL2 terminal (Ubuntu) from the Start menu
+
+#### On macOS:
+
+1. Download and install [Docker Desktop for Mac](https://www.docker.com/products/docker-desktop/)
+2. Open Docker Desktop from Applications
+3. Wait for Docker to start (you'll see the whale icon in the menu bar)
+4. Open Terminal
+
+### Step 2: Verify Docker Installation
+
+Run this command to check if Docker is working:
+
+```bash
+docker --version
+```
+
+You should see something like: `Docker version 24.0.0, build abc1234`
+
+### Step 3: Pull the HestiaCP Docker Image
+
+Download the pre-built HestiaCP image from Docker Hub:
+
+```bash
+docker pull dennii/hestiacp:latest
+```
+
+This will download the image (approximately 2-3 GB). It may take several minutes depending on your internet connection.
+
+### Step 4: Run HestiaCP Container
+
+#### Option A: Quick Start (Recommended for Testing)
+
+Run this single command to start HestiaCP:
 
 ```bash
 docker run -d \
   --name hestiacp \
+  --hostname hestia.local \
   --privileged \
-  -p 8083:8083 -p 80:80 -p 443:443 \
-  -e ADMIN_PASSWORD=your_secure_password \
+  -e ADMIN_USERNAME=admin \
+  -e ADMIN_PASSWORD=ChangeThisPassword123! \
+  -e ADMIN_EMAIL=admin@example.com \
+  -p 8083:8083 \
+  -p 80:80 \
+  -p 443:443 \
+  -p 3306:3306 \
+  -p 5432:5432 \
+  -v hestia_data:/usr/local/hestia \
+  -v hestia_home:/home \
+  -v hestia_mysql:/var/lib/mysql \
   dennii/hestiacp:latest
 ```
 
-**Using Docker Compose:**
+**Important:** Change `ADMIN_PASSWORD` to a strong password of your choice!
+
+#### Option B: Using Docker Compose (Recommended for Development)
+
+1. **Clone the repository:**
+
+   ```bash
+   git clone https://github.com/DeNNiiInc/hestiacp.git
+   cd hestiacp
+   ```
+
+2. **Edit the configuration (optional):**
+
+   Open `docker-compose.yml` in a text editor and change the admin password:
+
+   ```bash
+   nano docker-compose.yml
+   ```
+
+   Find this line and change the password:
+
+   ```yaml
+   - ADMIN_PASSWORD=changeme123!
+   ```
+
+   Press `Ctrl+X`, then `Y`, then `Enter` to save.
+
+3. **Start the container:**
+
+   ```bash
+   docker-compose up -d
+   ```
+
+### Step 5: Wait for Installation
+
+The first time you start the container, HestiaCP will automatically install. This takes **30-60 minutes**.
+
+**Check the installation progress:**
 
 ```bash
-git clone https://github.com/hestiacp/hestiacp.git
-cd hestiacp
-docker-compose up -d
+docker logs -f hestiacp
 ```
 
-Access the control panel at `https://localhost:8083`
+You'll see installation messages. Wait until you see:
 
-For detailed Docker documentation, see [DOCKER.md](DOCKER.md).
+```
+[HestiaCP Docker] HestiaCP is ready!
+[HestiaCP Docker] Web Interface: https://localhost:8083
+```
 
-> **Note:** The Docker version is intended for testing and development. For production use, we recommend installing HestiaCP directly on a server.
+Press `Ctrl+C` to exit the log view.
+
+### Step 6: Access HestiaCP
+
+1. **Open your web browser**
+2. **Navigate to:** `https://localhost:8083`
+3. **Accept the security warning** (the container uses a self-signed certificate)
+4. **Login with:**
+   - Username: `admin` (or what you set in ADMIN_USERNAME)
+   - Password: The password you set in ADMIN_PASSWORD
+
+🎉 **Congratulations!** You now have HestiaCP running in Docker!
+
+### Common Commands
+
+**View container status:**
+
+```bash
+docker ps
+```
+
+**Stop the container:**
+
+```bash
+docker stop hestiacp
+```
+
+**Start the container:**
+
+```bash
+docker start hestiacp
+```
+
+**Restart the container:**
+
+```bash
+docker restart hestiacp
+```
+
+**View logs:**
+
+```bash
+docker logs hestiacp
+```
+
+**Remove the container (WARNING: This deletes all data!):**
+
+```bash
+docker stop hestiacp
+docker rm hestiacp
+```
+
+### Troubleshooting
+
+**Problem: "Cannot connect to Docker daemon"**
+
+- **Solution:** Make sure Docker is running. On Windows/Mac, open Docker Desktop. On Linux, run: `sudo systemctl start docker`
+
+**Problem: "Port is already allocated"**
+
+- **Solution:** Another service is using the port. Either stop that service or change the port mapping. For example, to use port 8084 instead of 8083:
+  ```bash
+  -p 8084:8083
+  ```
+
+**Problem: Container keeps restarting**
+
+- **Solution:** Check the logs for errors:
+  ```bash
+  docker logs hestiacp
+  ```
+
+**Problem: Installation seems stuck**
+
+- **Solution:** Be patient! The first installation takes 30-60 minutes. Check logs to see progress.
+
+### Next Steps
+
+- Read the full Docker documentation: [DOCKER.md](DOCKER.md)
+- Learn about backing up your data
+- Configure SSL certificates
+- Add your first website
+
+### Need Help?
+
+- **Documentation:** <https://docs.hestiacp.com/>
+- **Forum:** <https://forum.hestiacp.com/>
+- **GitHub Issues:** <https://github.com/hestiacp/hestiacp/issues>
 
 ## Installing Hestia Control Panel
 

@@ -1,0 +1,38 @@
+version: '3.7'
+
+services:
+  app_proxy:
+    environment:
+      APP_HOST: hestiacp_server_1
+      APP_PORT: 8083
+
+  server:
+    image: dennii/hestiacp:latest
+    container_name: hestiacp
+    restart: on-failure
+    stop_grace_period: 1m
+    privileged: true
+    environment:
+      - ADMIN_USERNAME=admin
+      - ADMIN_PASSWORD=${APP_PASSWORD}
+      - HOSTNAME=hestia.local
+    volumes:
+      - ${APP_DATA_DIR}/data:/usr/local/hestia
+      - ${APP_DATA_DIR}/home:/home
+      - ${APP_DATA_DIR}/mysql:/var/lib/mysql
+      - ${APP_DATA_DIR}/postgresql:/var/lib/postgresql
+      - ${APP_DATA_DIR}/mail:/var/vmail
+      - ${APP_DATA_DIR}/ssl:/etc/letsencrypt
+      - ${APP_DATA_DIR}/dns:/var/named
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    cap_add:
+      - SYS_ADMIN
+      - NET_ADMIN
+      - SYS_TIME
+    tmpfs:
+      - /run
+      - /run/lock
+      - /tmp
+    networks:
+      default:
+        ipv4_address: $APP_IP

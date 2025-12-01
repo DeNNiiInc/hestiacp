@@ -1,0 +1,24 @@
+manifestVersion: 1
+id: hestiacp
+name: HestiaCP
+version: 1.10.0-alpha
+tagline: Lightweight and powerful control panel
+description: >-
+  Hestia Control Panel is designed to provide administrators an easy to use web and command line interface,
+  enabling them to quickly deploy and manage web domains, mail accounts, DNS zones, and databases from one central dashboard.
+developer: HestiaCP
+website: https://hestiacp.com
+dependencies: []
+repo: https://github.com/hestiacp/hestiacp
+support: https://forum.hestiacp.com
+port: 8083
+gallery:
+  - https://raw.githubusercontent.com/hestiacp/hestiacp/main/docs/public/hestiascreen.png
+path: ""
+defaultUsername: admin
+defaultPassword: changeme
+releaseNotes: >-
+  Initial release for Umbrel.
+  WARNING: This app requires significant system resources and privileged access.
+submitter: DeNNiiInc
+submission: https://github.com/DeNNiiInc/hestiacp

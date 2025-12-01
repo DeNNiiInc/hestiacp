@@ -1,0 +1,143 @@
+version: '3.8'
+
+# HestiaCP Stack for Portainer
+# This stack file is optimized for deployment through Portainer
+# with persistent volume management
+
+services:
+  hestiacp:
+    image: dennii/hestiacp:latest
+    container_name: hestiacp
+    hostname: hestia.local
+
+    # Privileged mode required for HestiaCP to manage services
+    privileged: true
+
+    # Restart policy
+    restart: unless-stopped
+
+    # Environment variables - CHANGE THESE VALUES!
+    environment:
+      # Admin credentials - IMPORTANT: Change these before deploying!
+      - ADMIN_USERNAME=admin
+      - ADMIN_PASSWORD=ChangeThisSecurePassword123!
+      - ADMIN_EMAIL=admin@yourdomain.com
+      - HOSTNAME=hestia.yourdomain.com
+
+    # Port mappings
+    # Adjust these if you have port conflicts
+    ports:
+      # Web Services
+      - "80:80"       # HTTP
+      - "443:443"     # HTTPS
+      - "8083:8083"   # HestiaCP Admin Panel
+
+      # FTP Services
+      - "21:21"       # FTP
+      - "12000-12100:12000-12100"  # FTP Passive Mode Range
+
+      # SSH
+      - "22:22"       # SSH (consider changing to non-standard port like 2222:22)
+
+      # Mail Services
+      - "25:25"       # SMTP
+      - "587:587"     # SMTP Submission
+      - "465:465"     # SMTPS
+      - "110:110"     # POP3
+      - "995:995"     # POP3S
+      - "143:143"     # IMAP
+      - "993:993"     # IMAPS
+
+      # DNS Services
+      - "53:53/tcp"   # DNS TCP
+      - "53:53/udp"   # DNS UDP
+
+      # Database Services (optional - only expose if needed externally)
+      - "3306:3306"   # MySQL/MariaDB
+      - "5432:5432"   # PostgreSQL
+
+    # Named volumes for persistent data
+    # These will be managed by Portainer and persist across container updates
+    volumes:
+      # HestiaCP installation and configuration
+      - hestia_data:/usr/local/hestia
+
+      # User home directories and website files
+      - hestia_home:/home
+
+      # MySQL/MariaDB database files
+      - hestia_mysql:/var/lib/mysql
+
+      # PostgreSQL database files
+      - hestia_postgresql:/var/lib/postgresql
+
+      # Email data and mailboxes
+      - hestia_mail:/var/vmail
+
+      # SSL certificates (Let's Encrypt)
+      - hestia_ssl:/etc/letsencrypt
+
+      # DNS zone files
+      - hestia_dns:/var/named
+
+      # System directories required for systemd
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+
+    # Required capabilities for systemd and service management
+    cap_add:
+      - SYS_ADMIN
+      - NET_ADMIN
+      - SYS_TIME
+
+    # Tmpfs mounts for systemd
+    tmpfs:
+      - /run
+      - /run/lock
+      - /tmp
+
+    # Network mode
+    network_mode: bridge
+
+    # Health check (optional)
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+
+# Named volumes definition
+# These volumes will persist data across container recreations
+volumes:
+  hestia_data:
+    driver: local
+    name: hestiacp_data
+
+  hestia_home:
+    driver: local
+    name: hestiacp_home
+
+  hestia_mysql:
+    driver: local
+    name: hestiacp_mysql
+
+  hestia_postgresql:
+    driver: local
+    name: hestiacp_postgresql
+
+  hestia_mail:
+    driver: local
+    name: hestiacp_mail
+
+  hestia_ssl:
+    driver: local
+    name: hestiacp_ssl
+
+  hestia_dns:
+    driver: local
+    name: hestiacp_dns
+
+# Networks (using default bridge network)
+networks:
+  default:
+    driver: bridge

@@ -4,7 +4,7 @@
 set -e
 
 # Configuration
-IMAGE_NAME="dennii/beyondcloudtechnology"
+IMAGE_NAME="dennii/hestiacp"
 VERSION="1.10.0-alpha"
 DOCKER_HUB_USERNAME="${DOCKER_HUB_USERNAME:-dennii}"
 

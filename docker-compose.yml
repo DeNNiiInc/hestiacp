@@ -5,7 +5,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: dennii/beyondcloudtechnology:latest
+    image: dennii/hestiacp:latest
     container_name: hestiacp
     hostname: hestia.local
     privileged: true

@@ -63,7 +63,7 @@ docker run -d \
   -v hestia_ssl:/etc/letsencrypt \
   --cap-add SYS_ADMIN \
   --cap-add NET_ADMIN \
-  dennii/beyondcloudtechnology:latest
+  dennii/hestiacp:latest
 ```
 
 ## Environment Variables

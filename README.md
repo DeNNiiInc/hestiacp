@@ -66,7 +66,7 @@ docker run -d \
   --privileged \
   -p 8083:8083 -p 80:80 -p 443:443 \
   -e ADMIN_PASSWORD=your_secure_password \
-  dennii/beyondcloudtechnology:latest
+  dennii/hestiacp:latest
 ```
 
 **Using Docker Compose:**

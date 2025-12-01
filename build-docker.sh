@@ -4,9 +4,9 @@
 set -e
 
 # Configuration
-IMAGE_NAME="hestiacp/hestiacp"
+IMAGE_NAME="dennii/beyondcloudtechnology"
 VERSION="1.10.0-alpha"
-DOCKER_HUB_USERNAME="${DOCKER_HUB_USERNAME:-hestiacp}"
+DOCKER_HUB_USERNAME="${DOCKER_HUB_USERNAME:-dennii}"
 
 # Colors for output
 RED='\033[0;31m'
